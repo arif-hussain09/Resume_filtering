@@ -96,7 +96,7 @@ with st.sidebar:
 
     api_key = st.text_input(
         "Groq API key",
-        value=config.get_groq_api_key() or "",
+        value="*********",
         type="password",
         help="Get a free key at console.groq.com. Stored only in this session.",
     )
