@@ -1,0 +1,71 @@
+resume-matcher/
+│
+├── app/
+│   ├── main.py
+│   ├── config.py
+│
+│   ├── ingestion/
+│   │   ├── pdf_parser.py
+│   │   ├── docx_parser.py
+│   │   └── text_cleaner.py
+│
+│   ├── schemas/
+│   │   ├── job.py
+│   │   ├── resume.py
+│   │   ├── evidence.py
+│   │   ├── matching.py
+│   │   └── evaluation.py
+│
+│   ├── extraction/
+│   │   ├── job_extractor.py
+│   │   ├── resume_extractor.py
+│   │   └── prompts.py
+│
+│   ├── normalization/
+│   │   ├── skills.py
+│   │   ├── titles.py
+│   │   └── aliases.py
+│
+│   ├── matching/
+│   │   ├── exact.py
+│   │   ├── fuzzy.py
+│   │   ├── semantic.py
+│   │   └── matcher.py
+│
+│   ├── scoring/
+│   │   ├── scorer.py
+│   │   ├── weights.py
+│   │   └── explanation.py
+│
+│   ├── evidence/
+│   │   ├── locator.py
+│   │   ├── span_mapper.py
+│   │   └── coordinate_mapper.py
+│
+│   ├── extras/
+│   │   └── detector.py
+│
+│   ├── recommendations/
+│   │   └── optimizer.py
+│
+│   ├── graphs/
+│   │   ├── state.py
+│   │   ├── nodes.py
+│   │   └── workflow.py
+│
+│   └── ui/
+│       ├── streamlit_app.py
+│       ├── hr_view.py
+│       ├── applicant_view.py
+│       └── pdf_viewer.py
+│
+├── tests/
+├── data/
+│   ├── jobs/
+│   ├── resumes/
+│   └── outputs/
+│
+├── .env
+├── pyproject.toml
+├── uv.lock
+└── README.md

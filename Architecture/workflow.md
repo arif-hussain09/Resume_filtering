@@ -1,0 +1,36 @@
+START
+  │
+  ▼
+parse_job
+  │
+  ▼
+extract_requirements
+  │
+  ▼
+normalize_requirements
+  │
+  ▼
+parse_resume
+  │
+  ▼
+extract_resume_evidence
+  │
+  ▼
+match_requirements
+  │
+  ▼
+map_evidence
+  │
+  ▼
+calculate_score
+  │
+  ├──────────────► detect_extras
+  │
+  ▼
+generate_recommendations
+  │
+  ▼
+build_candidate_report
+  │
+  ▼
+END
