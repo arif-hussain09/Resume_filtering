@@ -46,6 +46,10 @@ class ScoreBreakdown(BaseModel):
     experience_score: float = 0.0
     education_score: float = 0.0
     overall_score: float = 0.0
+    # Effective (normalized) weight of each category in the overall score.
+    # Categories the job does not test are dropped and their weight is
+    # redistributed, so an empty category no longer grants free marks.
+    weights_used: dict[str, float] = Field(default_factory=dict)
 
 
 class ExtraFeature(BaseModel):

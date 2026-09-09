@@ -1,107 +1,70 @@
-# from app.schemas.jobs import JobProfile, Requirement
-# from app.schemas.resume import ResumeProfile
-# from app.matching.matcher import match_requirements
-
-
-# def test_match_requirements():
-
-#     job = JobProfile(
-#         title="Machine Learning Engineer",
-#         requirements=[
-#             Requirement(
-#                 name="Python",
-#                 category="skill",
-#                 importance="required",
-#             ),
-#             Requirement(
-#                 name="PyTorch",
-#                 category="framework",
-#                 importance="required",
-#             ),
-#             Requirement(
-#                 name="SQL",
-#                 category="skill",
-#                 importance="required",
-#             ),
-#             Requirement(
-#                 name="Docker",
-#                 category="tool",
-#                 importance="preferred",
-#             ),
-#         ],
-#     )
-
-#     resume = ResumeProfile(
-#         name="Test Candidate",
-#         skills=[
-#             "Python",
-#             "PyTorch",
-#             "Docker",
-#         ],
-#     )
-
-#     results = match_requirements(job, resume)
-
-#     assert len(results) == 4
-
-#     assert results[0].status == "matched"
-#     assert results[1].status == "matched"
-#     assert results[2].status == "missing"
-#     assert results[3].status == "matched"
-
-## ----- Update the test to include experience and education requirements -----
-from app.schemas.jobs import JobProfile, Requirement
 from app.schemas.resume import ResumeProfile
-from app.matching.matcher import match_requirements
+from app.matching.aliases import canonicalize
+from app.matching.matcher import match_requirements, fuzzy_similarity
+
+from conftest import make_job, make_resume
 
 
-def test_exact_and_semantic_matching():
-
-    job = JobProfile(
-        title="Machine Learning Engineer",
-        requirements=[
-            Requirement(
-                name="Python",
-                category="skill",
-                importance="required",
-            ),
-            Requirement(
-                name="Deep Learning",
-                category="skill",
-                importance="required",
-            ),
-            Requirement(
-                name="SQL",
-                category="skill",
-                importance="required",
-            ),
-        ],
-    )
-
+def test_exact_and_semantic_matching(deterministic_semantics):
+    job = make_job()
     resume = ResumeProfile(
         name="Test Candidate",
-        skills=[
-            "Python",
-            "neural network modeling",
-        ],
+        skills=["Python", "MySQL", "neural network modeling"],
     )
 
-    results = match_requirements(
-        job=job,
-        resume=resume,
-    )
+    results = match_requirements(job=job, resume=resume)
+
+    by_name = {r.requirement: r for r in results}
+
+    # exact
+    assert by_name["Python"].status == "matched"
+    assert by_name["Python"].match_type == "exact"
+    assert by_name["Python"].similarity_score == 1.0
+
+    # alias exact: SQL requirement vs MySQL skill -> canonical "sql"
+    assert by_name["SQL"].status == "matched"
+    assert by_name["SQL"].match_type == "exact"
+
+    # missing requirements must NOT carry a matched_text
+    for result in results:
+        if result.status == "missing":
+            assert result.matched_text is None
+            assert result.similarity_score == 0.0
+            assert result.evidence == []
+
+
+def test_aliases_resolve_common_equivalents():
+    assert canonicalize("MySQL") == canonicalize("SQL")
+    assert canonicalize("K8s") == canonicalize("Kubernetes")
+    assert canonicalize("ML") == canonicalize("Machine Learning")
+    assert canonicalize("JS") == canonicalize("JavaScript")
+    assert canonicalize("PyTorch") != canonicalize("SQL")
+
+
+def test_missing_requirement_is_clean(deterministic_semantics):
+    job = make_job()
+    resume = ResumeProfile(name="Empty", skills=["COBOL"])
+
+    results = match_requirements(job=job, resume=resume)
 
     for result in results:
-        print(
-            result.requirement,
-            result.status,
-            result.match_type,
-            result.similarity_score,
-        )
+        assert result.status == "missing"
+        assert result.matched_text is None
+        assert result.similarity_score == 0.0
 
-    assert results[0].status == "matched"
-    assert results[0].match_type == "exact"
 
-    assert results[1].status in {"matched", "partial"}
+def test_evidence_attached_to_matches(deterministic_semantics):
+    resume = make_resume()
+    results = match_requirements(job=make_job(), resume=resume)
 
-    assert results[2].status == "missing"
+    matched = [r for r in results if r.status == "matched"]
+    assert matched
+    for result in matched:
+        assert result.evidence, "matched requirements must carry evidence"
+        assert result.evidence[0].text
+
+
+def test_fuzzy_similarity_basics():
+    assert fuzzy_similarity("Python", "python") == 1.0
+    assert fuzzy_similarity("PostgreSQL", "Postgres") > 0.7
+    assert fuzzy_similarity("Python", "Kubernetes") < 0.4

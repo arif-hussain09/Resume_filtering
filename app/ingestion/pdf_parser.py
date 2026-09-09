@@ -37,4 +37,10 @@ def extract_pdf_pages(file_path: str | Path) -> list[dict]:
                 }
             )
 
+    if not any(page["text"] for page in pages):
+        raise ValueError(
+            f"No text layer found in {file_path}. The PDF is probably a "
+            "scanned image; OCR is not supported yet."
+        )
+
     return pages
